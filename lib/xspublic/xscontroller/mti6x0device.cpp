@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -77,6 +45,7 @@
 #include <xstypes/xscanoutputconfigurationarray.h>
 #include <xstypes/xsstringoutputtypearray.h>
 #include <xstypes/xsintarray.h>
+#include "xsgnssreceivertype.h"
 
 using namespace xsens;
 
@@ -116,12 +85,13 @@ MtiBaseDevice::BaseFrequencyResult Mti6X0Device::getBaseFrequencyInternal(XsData
 
 	if ((dataType & XDI_FullTypeMask) == XDI_RateOfTurnHR)
 	{
-		result.m_frequency = 1600;
+		result.m_frequency = hardwareVersion().major() == 2 ? 2000 : 1600;
 		return result;
 	}
 
 	auto baseFreq = [this](XsDataIdentifier dataType)
 	{
+		XsDataIdentifier fullType = (dataType & XDI_FullTypeMask);
 		switch (dataType & XDI_TypeMask)
 		{
 			case XDI_None:
@@ -144,7 +114,9 @@ MtiBaseDevice::BaseFrequencyResult Mti6X0Device::getBaseFrequencyInternal(XsData
 				return 200;
 
 			case XDI_GnssGroup:
-				return deviceId().isGnss() ? 4 : 0;
+				if (fullType == XDI_GnssPvtPulse)
+					return deviceId().isRtk() ? XDI_MAX_FREQUENCY_VAL : 0;
+				return deviceId().isGnss() ? XDI_MAX_FREQUENCY_VAL : 0;
 			case XDI_PressureGroup:
 				return 100;
 			case XDI_PositionGroup:
@@ -403,3 +375,43 @@ XsVector Mti6X0Device::gnssLeverArm() const
 	return arm;
 }
 
+/*! \copydoc XsDevice::ubloxGnssPlatform
+*/
+XsUbloxGnssPlatform Mti6X0Device::ubloxGnssPlatform() const
+{
+	XsUbloxGnssPlatform platform = XGP_Portable;
+	auto gnssReceivSett = gnssReceiverSettings();
+	if (gnssReceivSett.size() > 3)
+	{
+		int gnssReceiverModel = gnssReceivSett[0];
+		int gnssReceiverOptions = gnssReceivSett[3];
+
+		//only read the value for u-blox devices
+		XsGnssReceiverType actualType = (XsGnssReceiverType)gnssReceiverModel;
+		if (actualType == XGRT_Ublox_Max_M8Q || actualType == XGRT_Ublox_Neo_M8P || actualType == XGRT_Ublox_ZED_F9P)
+			platform = static_cast<XsUbloxGnssPlatform>(gnssReceiverOptions & 0xFFFF);
+	}
+	return platform;
+}
+
+/*! \copydoc XsDevice::setUbloxGnssPlatform
+*/
+bool Mti6X0Device::setUbloxGnssPlatform(XsUbloxGnssPlatform ubloxGnssPlatform)
+{
+	bool result = false;
+	auto gnssReceivSett = gnssReceiverSettings();
+	if (gnssReceivSett.size() > 3)
+	{
+		int gnssReceiverModel = gnssReceivSett[0];
+		int gnssReceiverOptions = gnssReceivSett[3];
+
+		//only set the value for u-blox devices
+		XsGnssReceiverType actualType = (XsGnssReceiverType)gnssReceiverModel;
+		if (actualType == XGRT_Ublox_Max_M8Q || actualType == XGRT_Ublox_Neo_M8P || actualType == XGRT_Ublox_ZED_F9P)
+		{
+			gnssReceivSett[3] = (int) ((((unsigned int)gnssReceiverOptions) & 0xFFFF0000U) | uint16_t(ubloxGnssPlatform));
+			result = setGnssReceiverSettings(gnssReceivSett);
+		}
+	}
+	return result;
+}

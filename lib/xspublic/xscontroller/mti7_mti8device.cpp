@@ -1,5 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -30,61 +30,30 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-#include "mti7device.h"
+#include "mti7_mti8device.h"
 #include <xstypes/xsstatusflag.h>
+#include <xstypes/xsvector.h>
 
-Mti7Device::Mti7Device(Communicator* comm)
+MTi7_MTi8Device::MTi7_MTi8Device(Communicator* comm)
 	: MtiBaseDeviceEx(comm)
 {
 	if (comm)
 		comm->setDefaultTimeout(2000); //Increase the default timeout for MTi-1 devices because a settings write can occasionally take ~900ms
 }
 
-Mti7Device::Mti7Device(XsDevice* masterdevice)
+MTi7_MTi8Device::MTi7_MTi8Device(XsDevice* masterdevice)
 	: MtiBaseDeviceEx(masterdevice)
 {
 }
 
-Mti7Device::~Mti7Device()
+MTi7_MTi8Device::~MTi7_MTi8Device()
 {
 }
 
 namespace
 {
 //! \brief Returns the default frequency of the supplied \a dataType
-int baseFreq(XsDataIdentifier dataType)
+int baseFreq(MTi7_MTi8Device const* device, XsDataIdentifier dataType)
 {
 	switch (dataType & XDI_TypeMask)
 	{
@@ -112,8 +81,11 @@ int baseFreq(XsDataIdentifier dataType)
 			return 50;
 		case XDI_GnssGroup:
 		{
-			if ((dataType & XDI_FullTypeMask) == XDI_GnssPvtData)
-				return 4;
+			XsDataIdentifier fullType = (dataType & XDI_FullTypeMask);
+			if (fullType == XDI_GnssPvtPulse)
+				return device->deviceId().isRtk() ? XDI_MAX_FREQUENCY_VAL : 0;
+			if (fullType == XDI_GnssGroup || fullType == XDI_GnssPvtData)
+				return XDI_MAX_FREQUENCY_VAL;
 			return 0;
 		}
 		default:
@@ -124,7 +96,7 @@ int baseFreq(XsDataIdentifier dataType)
 
 /*! \brief Returns the base update rate (hz) corresponding to the dataType
 */
-MtiBaseDevice::BaseFrequencyResult Mti7Device::getBaseFrequencyInternal(XsDataIdentifier dataType) const
+MtiBaseDevice::BaseFrequencyResult MTi7_MTi8Device::getBaseFrequencyInternal(XsDataIdentifier dataType) const
 {
 	BaseFrequencyResult result;
 	result.m_frequency = 0;
@@ -143,7 +115,7 @@ MtiBaseDevice::BaseFrequencyResult Mti7Device::getBaseFrequencyInternal(XsDataId
 		return result;
 	}
 
-	result.m_frequency = baseFreq(dataType);
+	result.m_frequency = baseFreq(this, dataType);
 
 	if (((dataType & XDI_TypeMask) == XDI_TimestampGroup) || ((dataType & XDI_TypeMask) == XDI_GnssGroup))
 		result.m_divedable = false;
@@ -151,12 +123,12 @@ MtiBaseDevice::BaseFrequencyResult Mti7Device::getBaseFrequencyInternal(XsDataId
 	return result;
 }
 
-bool Mti7Device::hasIccSupport() const
+bool MTi7_MTi8Device::hasIccSupport() const
 {
 	return true;
 }
 
-uint32_t Mti7Device::supportedStatusFlags() const
+uint32_t MTi7_MTi8Device::supportedStatusFlags() const
 {
 	return (uint32_t)(
 			//|XSF_SelfTestOk
@@ -181,17 +153,18 @@ uint32_t Mti7Device::supportedStatusFlags() const
 			//|XSF_SyncOut
 			| XSF_FilterMode
 			| XSF_HaveGnssTimePulse
+			| (deviceId().isRtk() ? XSF_RtkStatus : 0)
 		);
 }
 
-bool Mti7Device::setStringOutputMode(uint16_t /*type*/, uint16_t /*period*/, uint16_t /*skipFactor*/)
+bool MTi7_MTi8Device::setStringOutputMode(uint16_t /*type*/, uint16_t /*period*/, uint16_t /*skipFactor*/)
 {
 	return true;
 }
 
 /*! \copybrief XsDevice::shortProductCode
 */
-XsString Mti7Device::shortProductCode() const
+XsString MTi7_MTi8Device::shortProductCode() const
 {
 	XsString code = productCode();
 
@@ -199,4 +172,42 @@ XsString Mti7Device::shortProductCode() const
 		code = stripProductCode(code);
 
 	return code;
+}
+
+/*! \copydoc XsDevice::setGnssLeverArm
+*/
+bool MTi7_MTi8Device::setGnssLeverArm(const XsVector& arm)
+{
+	if (!deviceId().isRtk())
+		return false;
+
+	XsMessage snd(XMID_SetGnssLeverArm, 3 * sizeof(float));
+	snd.setBusId(busId());
+	snd.setDataFloat((float)arm[0], 0/* sizeof(float)*/);
+	snd.setDataFloat((float)arm[1], 1 * sizeof(float));
+	snd.setDataFloat((float)arm[2], 2 * sizeof(float));
+
+	XsMessage rcv;
+	if (!doTransaction(snd, rcv))
+		return false;
+
+	return true;
+}
+
+/*! \copydoc XsDevice::gnssLeverArm
+*/
+XsVector MTi7_MTi8Device::gnssLeverArm() const
+{
+	if (!deviceId().isRtk())
+		return XsVector();
+
+	XsMessage snd(XMID_ReqGnssLeverArm), rcv;
+	if (!doTransaction(snd, rcv))
+		return XsVector();
+
+	XsVector arm(3);
+	arm[0] = rcv.getDataFloat(0/* sizeof(float)*/);
+	arm[1] = rcv.getDataFloat(1 * sizeof(float));
+	arm[2] = rcv.getDataFloat(2 * sizeof(float));
+	return arm;
 }

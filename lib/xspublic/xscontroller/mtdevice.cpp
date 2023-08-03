@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -220,14 +188,68 @@ XsDeviceOptionFlag MtDevice::deviceOptionFlags() const
 		return (XsDeviceOptionFlag)rcv.getDataLong();
 	return XDOF_None;
 }
-/*! \copybrief XsDevice::gnssPlatform
+
+/*! \copybrief XsDevice::ubloxGnssPlatform
 */
-XsGnssPlatform MtDevice::gnssPlatform() const
+XsUbloxGnssPlatform MtDevice::ubloxGnssPlatform() const
 {
 	XsMessage snd(XMID_ReqGnssPlatform), rcv;
 	if (doTransaction(snd, rcv))
-		return (XsGnssPlatform)rcv.getDataShort();
+		return static_cast<XsUbloxGnssPlatform>(rcv.getDataShort());
 	return XGP_Portable;
+}
+
+/*! \copybrief XsDevice::setUbloxGnssPlatform
+*/
+bool MtDevice::setUbloxGnssPlatform(XsUbloxGnssPlatform ubloxGnssPlatform)
+{
+	XsMessage snd(XMID_SetGnssPlatform, 1);
+	snd.setBusId(busId());
+	snd.setDataShort((uint16_t)ubloxGnssPlatform);
+	if (!doTransaction(snd))
+		return false;
+	return true;
+}
+
+/*! \copydoc XsDevice::gnssReceiverSettings
+*/
+XsIntArray MtDevice::gnssReceiverSettings() const
+{
+	XsMessage snd(XMID_ReqGnssReceiverSettings), rcv;
+	snd.setBusId(busId());
+	if (doTransaction(snd, rcv))
+	{
+		XsIntArray gnssReceiverSettings = XsIntArray(4);
+		gnssReceiverSettings[0] = (int)rcv.getDataShort(0);//receiver type
+		gnssReceiverSettings[1] = (int)rcv.getDataShort(2);//receiver baud rate
+		gnssReceiverSettings[2] = (int)rcv.getDataShort(4);//receiver input rate
+		gnssReceiverSettings[3] = (int)rcv.getDataLong(6);//receiver options
+		return gnssReceiverSettings;
+	}
+	return XsIntArray();
+}
+
+/*! \copydoc XsDevice::setGnssReceiverSettings
+*/
+bool MtDevice::setGnssReceiverSettings(const XsIntArray& gnssReceiverSettings)
+{
+	XsMessage snd(XMID_SetGnssReceiverSettings, 10);
+	snd.setBusId(busId());
+
+	if (gnssReceiverSettings.size() > 0)
+		snd.setDataShort((uint16_t)gnssReceiverSettings[0], 0);//receiver type
+	if (gnssReceiverSettings.size() > 1)
+		snd.setDataShort((uint16_t)gnssReceiverSettings[1], 2);//receiver baud rate
+	if (gnssReceiverSettings.size() > 2)
+		snd.setDataShort((uint16_t)gnssReceiverSettings[2], 4);//receiver input rate
+	if (gnssReceiverSettings.size() > 3)
+		snd.setDataLong((uint32_t)gnssReceiverSettings[3], 6);//receiver options
+
+	XsMessage ack;
+	if (!doTransaction(snd, ack))
+		return false;
+
+	return true;
 }
 
 /*! \copybrief XsDevice::outputConfiguration

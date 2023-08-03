@@ -30,31 +30,22 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef MTBDATALOGGER_H
-#define MTBDATALOGGER_H
+#ifndef XSGNSSRECEIVERTYPE_H
+#define XSGNSSRECEIVERTYPE_H
 
-#include "datalogger.h"
-#include <memory>
-
-class IoInterfaceFile;
-
-class MtbDataLogger : public DataLogger
+/*! \brief These enums represent various GNSS receiver types that are supported.
+*/
+enum XsGnssReceiverType
 {
-public:
-	MtbDataLogger();
-	~MtbDataLogger() override;
-
-	bool writeMessage(const XsMessage& message) override;
-	bool writeRaw(const XsByteArray& message);
-
-	bool create(const XsString& filename);
-	void close() override;
-	void close(bool deleteFile);
-	XsString filename() const;
-
-private:
-	XsResultValue m_lastResult;
-	std::shared_ptr<IoInterfaceFile> m_ioInterfaceFile;
+	XGRT_Ublox_Max_M8Q			= 0,
+	XGRT_Generic_Nmea			= 1,
+	XGRT_Ublox_Neo_M8P			= 2,
+	XGRT_Ublox_ZED_F9P			= 3,
+	XGRT_Septentrio_SBF			= 4,
+	XGRT_Trimble_BX992			= 5,
+	XGRT_None					= 0xFFFF
 };
+
+typedef enum XsGnssReceiverType XsGnssReceiverType;
 
 #endif

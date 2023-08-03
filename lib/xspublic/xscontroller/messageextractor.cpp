@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -112,16 +80,6 @@ XsResultValue MessageExtractor::processNewData(XsDevice* devicePtr, XsByteArray 
 	XsSize popped = 0;
 	messages.clear();
 
-	auto retval = [this, &popped, &messages]()
-	{
-		if (popped > 0)
-			m_buffer.pop_front(popped);
-		if (messages.empty())
-			return XRV_TIMEOUTNODATA;
-
-		return XRV_OK;
-	};
-
 	while (true)
 	{
 		assert(popped <= m_buffer.size());
@@ -130,6 +88,7 @@ XsResultValue MessageExtractor::processNewData(XsDevice* devicePtr, XsByteArray 
 
 		XsProtocolType type;
 		MessageLocation location = m_protocolManager->findMessage(type, raw);
+		assert(location.m_startPos == -1 || location.m_incompletePos == -1 || location.m_incompletePos < location.m_startPos);
 
 		if (location.isValid())
 		{
@@ -138,51 +97,48 @@ XsResultValue MessageExtractor::processNewData(XsDevice* devicePtr, XsByteArray 
 				devicePtr->onMessageDetected2(type, detectedMessage);
 
 			XsMessage message = m_protocolManager->convertToMessage(type, location, raw);
+			assert(location.m_startPos == -1 || location.m_incompletePos == -1 || location.m_incompletePos < location.m_startPos);
 
 			if (location.isValid() && !message.empty() && m_protocolManager->validateMessage(message))
 			{
-				assert(location.m_startPos == -1 || location.m_incompletePos == -1 || location.m_incompletePos < location.m_startPos);
-
-				if (location.m_startPos > 0)
+				// We are going to skip something
+				if (location.m_incompletePos != -1)
 				{
-					// We are going to skip something
-					if (location.m_incompletePos != -1)
+					// We are going to skip an incomplete but potentially valid message
+					// First wait a couple of times to see if we can complete that message before skipping
+					if (m_retryTimeout++ < m_maxIncompleteRetryCount)
 					{
-						// We are going to skip an incomplete but potentially valid message
-						// First wait a couple of times to see if we can complete that message before skipping
-						if (m_retryTimeout++ < m_maxIncompleteRetryCount)
+						// wait a bit until we have more data
+						// but already pop the data that we know contains nothing useful
+						if (location.m_incompletePos > 0)
 						{
-							// wait a bit until we have more data
-							// but already pop the data that we know contains nothing useful
-							if (location.m_incompletePos > 0)
-							{
-								JLALERTG("Skipping " << location.m_incompletePos << " bytes from the input buffer");
-								popped += (XsSize)(ptrdiff_t) location.m_incompletePos;
-							}
+							JLALERTG("Skipping " << location.m_incompletePos << " bytes from the input buffer");
+							popped += (XsSize)(ptrdiff_t) location.m_incompletePos;
+						}
 
-							return retval();
-						}
-						else
-						{
-							// We've waited a bit for the incomplete message to complete but it never completed
-							// So: We are going to skip an incomplete but potentially valid message
-							JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer that may contain an incomplete message at " << location.m_incompletePos
-								<< " found: " << (int)message.getTotalMessageSize()
-								<< std::hex << std::setfill('0')
-								<< " First bytes " << std::setw(2) << (int)message.getMessageStart()[0]
-								<< " " << std::setw(2) << (int)message.getMessageStart()[1]
-								<< " " << std::setw(2) << (int)message.getMessageStart()[2]
-								<< " " << std::setw(2) << (int)message.getMessageStart()[3]
-								<< " " << std::setw(2) << (int)message.getMessageStart()[4]
-								<< std::dec << std::setfill(' '));
-						}
+						break;
 					}
 					else
 					{
-						// We are going to skip something but we are not going to skip an incomplete but potentially valid message
-						JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer");
+						// We've waited a bit for the incomplete message to complete but it never completed
+						// So: We are going to skip an incomplete but potentially valid message
+						JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer that may contain an incomplete message at " << location.m_incompletePos
+							<< " found: " << (int)message.getTotalMessageSize()
+							<< std::hex << std::setfill('0')
+							<< " First bytes " << std::setw(2) << (int)message.getMessageStart()[0]
+							<< " " << std::setw(2) << (int)message.getMessageStart()[1]
+							<< " " << std::setw(2) << (int)message.getMessageStart()[2]
+							<< " " << std::setw(2) << (int)message.getMessageStart()[3]
+							<< " " << std::setw(2) << (int)message.getMessageStart()[4]
+							<< std::dec << std::setfill(' '));
 					}
 				}
+				else if (location.m_startPos > 0)
+				{
+					// We are going to skip something but we are not going to skip an incomplete but potentially valid message
+					JLALERTG("Skipping " << location.m_startPos << " bytes from the input buffer");
+				}
+
 				if (m_retryTimeout)
 				{
 					JLTRACEG("Resetting retry count from " << m_retryTimeout);
@@ -198,12 +154,26 @@ XsResultValue MessageExtractor::processNewData(XsDevice* devicePtr, XsByteArray 
 				if (type == XPT_Nmea)
 					popped += (XsSize)(ptrdiff_t)(location.m_size + location.m_startPos);
 				else
-					return retval();
+					break;
 			}
 		}
 		else
-			return retval();
+		{
+			int bestPosition = location.m_incompletePos >= 0 ? location.m_incompletePos : location.m_startPos;
+			if (bestPosition < 0)
+				popped = m_buffer.size();
+			else
+				popped += (XsSize)(ptrdiff_t)bestPosition;
+			break;
+		}
 	}
+
+	if (popped > 0)
+		m_buffer.pop_front(popped);
+	if (messages.empty())
+		return XRV_TIMEOUTNODATA;
+
+	return XRV_OK;
 }
 
 /*! \brief Clears the processing buffer

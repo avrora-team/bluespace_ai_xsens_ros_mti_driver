@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -110,6 +78,7 @@
 #define XS_DID_GPL_2					0x02000000
 #define XS_DID_GPL_3					0x03000000
 #define XS_DID_GPL_7					0x07000000
+#define XS_DID_GPL_8					0x08000000
 #define XS_DID_GPL_10					0x01000000
 #define XS_DID_GPL_20					0x02000000
 #define XS_DID_GPL_30					0x03000000
@@ -130,6 +99,7 @@
 #define XS_DID_GPL_AHRSGNSSG			XS_DID_GPL_500
 #define XS_DID_GPL_GNSSINS				XS_DID_GPL_600
 #define XS_DID_GPL_GNSSINSG				XS_DID_GPL_700
+#define XS_DID_GPL_GNSSINSRTK			XS_DID_GPL_800
 
 #define XS_DID_TYPE_AWINDA				XS_DID_TYPEH_AWINDAMASTER
 #define XS_DID_TYPE_AWINDA_STATION		(XS_DID_TYPEH_AWINDAMASTER | XS_DID_TYPEL_STATION)
@@ -150,6 +120,7 @@
 #define XS_DID_MK4TYPE_MT_2_MPU			(XS_DID_TYPEH_MT_X_MPU | XS_DID_GPL_2)
 #define XS_DID_MK4TYPE_MT_3_MPU			(XS_DID_TYPEH_MT_X_MPU | XS_DID_GPL_3)
 #define XS_DID_MK4TYPE_MT_7_MPU			(XS_DID_TYPEH_MT_X_MPU | XS_DID_GPL_7)
+#define XS_DID_MK4TYPE_MT_8_MPU			(XS_DID_TYPEH_MT_X_MPU | XS_DID_GPL_8)
 #define XS_DID_MK4TYPE_MT_310			(XS_DID_TYPEH_MT_3X0 | XS_DID_GPL_1)
 #define XS_DID_MK4TYPE_MT_320			(XS_DID_TYPEH_MT_3X0 | XS_DID_GPL_2)
 #define XS_DID_MK4TYPE_MT_330			(XS_DID_TYPEH_MT_3X0 | XS_DID_GPL_3)

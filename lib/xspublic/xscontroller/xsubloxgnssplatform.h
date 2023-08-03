@@ -30,31 +30,26 @@
 //  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
 //  
 
-#ifndef MTBDATALOGGER_H
-#define MTBDATALOGGER_H
+#ifndef XSUBLOXGNSSPLATFORM_H
+#define XSUBLOXGNSSPLATFORM_H
 
-#include "datalogger.h"
-#include <memory>
-
-class IoInterfaceFile;
-
-class MtbDataLogger : public DataLogger
+/*! \brief Used to select u-blox GNSS chip platform
+	\sa XsDevice::setUbloxGnssPlatform
+	\details These enum values represent different platform setting for the u-blox GNSS chip
+*/
+enum XsUbloxGnssPlatform
 {
-public:
-	MtbDataLogger();
-	~MtbDataLogger() override;
-
-	bool writeMessage(const XsMessage& message) override;
-	bool writeRaw(const XsByteArray& message);
-
-	bool create(const XsString& filename);
-	void close() override;
-	void close(bool deleteFile);
-	XsString filename() const;
-
-private:
-	XsResultValue m_lastResult;
-	std::shared_ptr<IoInterfaceFile> m_ioInterfaceFile;
+	XGP_Portable				= 0,
+	XGP_Stationary				= 2,
+	XGP_Pedestrian				= 3,
+	XGP_Automotive				= 4,
+	XGP_AtSea					= 5,
+	XGP_Airborne1g				= 6,
+	XGP_Airborne2g				= 7,
+	XGP_Airborne4g				= 8,	//!< Airborne with <4g Acceleration
+	XGP_Wrist					= 9
 };
+
+typedef enum XsUbloxGnssPlatform XsUbloxGnssPlatform;
 
 #endif

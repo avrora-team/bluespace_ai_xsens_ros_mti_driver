@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -325,6 +293,8 @@ int XsDeviceId_hasInternalGnss(struct XsDeviceId const* thisPtr)
 		if (thisPtr->m_productCode[7] == 'G')
 			return 1;
 	}
+	if (XsDeviceId_isMtigX10(thisPtr))
+		return 1;
 	return 0;
 
 }
@@ -607,7 +577,8 @@ int XsDeviceId_isGnss(const struct XsDeviceId* thisPtr)
 	if (XsDeviceId_isLegacyDeviceId(thisPtr))
 	{
 		return (((thisPtr->m_deviceId & XS_DID_MK4TYPE_MASK) == XS_DID_MK4TYPE_MT_700) ||
-				((thisPtr->m_deviceId & XS_DID_MK4TYPE_MASK) == XS_DID_MK4TYPE_MT_7_MPU));
+				((thisPtr->m_deviceId & XS_DID_MK4TYPE_MASK) == XS_DID_MK4TYPE_MT_7_MPU)
+				||(thisPtr->m_deviceId & XS_DID_MK4TYPE_MASK) == XS_DID_MK4TYPE_MT_8_MPU);
 	}
 	else
 	{
@@ -636,7 +607,7 @@ int XsDeviceId_isGnss(const struct XsDeviceId* thisPtr)
 int XsDeviceId_isRtk(const struct XsDeviceId* thisPtr)
 {
 	if (XsDeviceId_isLegacyDeviceId(thisPtr))
-		return 0;
+		return ((thisPtr->m_deviceId & XS_DID_MK4TYPE_MASK) == XS_DID_MK4TYPE_MT_8_MPU);
 	else
 	{
 		if (memcmp(thisPtr->m_productCode, "MTi-", 4) != 0)
@@ -905,6 +876,8 @@ void XsDeviceId_typeName(XsDeviceId const* thisPtr, XsString* str)
 		else if (XsDeviceId_isAhrs(thisPtr))
 			XsString_assignCharArray(str, "MTi-330");
 	}
+	else if (XsDeviceId_isMtiX(thisPtr) && XsDeviceId_isRtk(thisPtr))
+		XsString_assignCharArray(str, "MTi-8");
 	else if (XsDeviceId_isMtMk4_1(thisPtr))
 		XsString_assignCharArray(str, "MTi-1");
 	else if (XsDeviceId_isMtMk4_2(thisPtr))
@@ -1096,11 +1069,11 @@ int XsDeviceId_isMtMk4_3(const struct XsDeviceId* thisPtr)
 
 /*! \brief Test if this device ID represents an MTMk4 7.
 	\returns True if it is an MTMk4 7.
-	\deprecated Use isMtiX() and isGnss()
+	\deprecated Use isMtiX(), isGnss(), and !isRtk() together
 */
 int XsDeviceId_isMtMk4_7(const struct XsDeviceId* thisPtr)
 {
-	return XsDeviceId_isMtiX(thisPtr) && XsDeviceId_isGnss(thisPtr);
+	return XsDeviceId_isMtiX(thisPtr) && XsDeviceId_isGnss(thisPtr) && !XsDeviceId_isRtk(thisPtr);
 }
 
 /*! \brief Test if this device ID represents an MTMk4 10 series.

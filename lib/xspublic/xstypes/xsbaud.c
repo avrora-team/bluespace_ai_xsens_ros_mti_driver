@@ -1,37 +1,5 @@
 
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without modification,
-//  are permitted provided that the following conditions are met:
-//  
-//  1.	Redistributions of source code must retain the above copyright notice,
-//  	this list of conditions, and the following disclaimer.
-//  
-//  2.	Redistributions in binary form must reproduce the above copyright notice,
-//  	this list of conditions, and the following disclaimer in the documentation
-//  	and/or other materials provided with the distribution.
-//  
-//  3.	Neither the names of the copyright holders nor the names of their contributors
-//  	may be used to endorse or promote products derived from this software without
-//  	specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-//  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-//  THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-//  SPECIAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
-//  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY OR
-//  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.THE LAWS OF THE NETHERLANDS 
-//  SHALL BE EXCLUSIVELY APPLICABLE AND ANY DISPUTES SHALL BE FINALLY SETTLED UNDER THE RULES 
-//  OF ARBITRATION OF THE INTERNATIONAL CHAMBER OF COMMERCE IN THE HAGUE BY ONE OR MORE 
-//  ARBITRATORS APPOINTED IN ACCORDANCE WITH SAID RULES.
-//  
-
-
-//  Copyright (c) 2003-2021 Xsens Technologies B.V. or subsidiaries worldwide.
+//  Copyright (c) 2003-2022 Xsens Technologies B.V. or subsidiaries worldwide.
 //  All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without modification,
@@ -64,6 +32,12 @@
 
 #include "xsbaud.h"
 
+#ifdef _WIN32
+#define HAVE_ALL_RATES	1
+#else
+#define HAVE_ALL_RATES	0
+#endif
+
 /*! \addtogroup cinterface C Interface
 	@{
 */
@@ -82,15 +56,18 @@ XsBaudRate XsBaud_codeToRate(XsBaudCode baudcode)
 			return XBR_4800;
 		case XBC_9k6:
 			return XBR_9600;
-		//	case XBC_14k4:		  return XBR_14k4;
+		case XBC_14k4:
+			return XBR_14k4;
 		case XBC_19k2:
 			return XBR_19k2;
-		//	case XBC_28k8:		  return XBR_28k8;
+		case XBC_28k8:
+			return XBR_28k8;
 		case XBC_38k4:
 			return XBR_38k4;
 		case XBC_57k6:
 			return XBR_57k6;
-		//	case XBC_76k8:		  return XBR_76k8;
+		case XBC_76k8:
+			return XBR_76k8;
 		case XBC_115k2:
 			return XBR_115k2;
 		case XBC_230k4:
@@ -121,19 +98,24 @@ XsBaudCode XsBaud_rateToCode(XsBaudRate baudrate)
 {
 	switch (baudrate)
 	{
+#if HAVE_ALL_RATES
+		case XBR_14k4:
+			return XBC_14k4;
+		case XBR_28k8:
+			return XBC_28k8;
+		case XBR_76k8:
+			return XBC_76k8;
+#endif
 		case XBR_4800:
 			return XBC_4k8;
 		case XBR_9600:
 			return XBC_9k6;
-		//	case XBR_14k4:	return XBC_14k4;
 		case XBR_19k2:
 			return XBC_19k2;
-		//	case XBR_28k8:	return XBC_28k8;
 		case XBR_38k4:
 			return XBC_38k4;
 		case XBR_57k6:
 			return XBC_57k6;
-		//	case XBR_76k8:	return XBC_76k8;
 		case XBR_115k2:
 			return XBC_115k2;
 		case XBR_230k4:
@@ -163,19 +145,24 @@ int XsBaud_rateToNumeric(XsBaudRate baudrate)
 {
 	switch (baudrate)
 	{
+#if HAVE_ALL_RATES
+		case XBR_14k4:
+			return 14400;
+		case XBR_28k8:
+			return 28800;
+		case XBR_76k8:
+			return 76800;
+#endif
 		case XBR_4800:
 			return 4800;
 		case XBR_9600:
 			return 9600;
-		//	case XBR_14k4:	return 14400;
 		case XBR_19k2:
 			return 19200;
-		//	case XBR_28k8:	return 28800;
 		case XBR_38k4:
 			return 38400;
 		case XBR_57k6:
 			return 57600;
-		//	case XBR_76k8:	return 76800;
 		case XBR_115k2:
 			return 115200;
 		case XBR_230k4:
@@ -205,19 +192,24 @@ XsBaudRate XsBaud_numericToRate(int numeric)
 {
 	switch (numeric)
 	{
+#if HAVE_ALL_RATES
+		case 14400:
+			return XBR_14k4;
+		case 28800:
+			return XBR_28k8;
+		case 76800:
+			return XBR_76k8;
+#endif
 		case 4800:
 			return XBR_4800;
 		case 9600:
 			return XBR_9600;
-		//	case 14400:		return XBR_14k4;
 		case 19200:
 			return XBR_19k2;
-		//	case 28800:		return XBR_28k8;
 		case 38400:
 			return XBR_38k4;
 		case 57600:
 			return XBR_57k6;
-		//	case 76800:		return XBR_76k8;
 		case 115200:
 			return XBR_115k2;
 		case 230400:
