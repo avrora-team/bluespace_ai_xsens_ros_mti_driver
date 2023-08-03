@@ -82,6 +82,7 @@
 #include "messagepublishers/velocityincrementpublisher.h"
 #include "messagepublishers/positionllapublisher.h"
 #include "messagepublishers/velocitypublisher.h"
+#include "messagepublishers/odometry_publisher.h"
 
 XdaInterface::XdaInterface(const std::string &node_name, const rclcpp::NodeOptions &options)
 	: Node(node_name, options)
@@ -183,6 +184,10 @@ void XdaInterface::registerPublishers()
 	{
 		registerCallback(new VelocityPublisher(node));
 	}
+  if (get_parameter("pub_odometry", should_publish) && should_publish)
+  {
+    registerCallback(new OdometryPublisher(node));
+  }
 }
 
 bool XdaInterface::connectDevice()
@@ -352,6 +357,7 @@ void XdaInterface::declareCommonParameters()
 	declare_parameter("pub_transform", should_publish);
 	declare_parameter("pub_positionLLA", should_publish);
 	declare_parameter("pub_velocity", should_publish);
+  declare_parameter("pub_odometry", should_publish);
 
 	declare_parameter("scan_for_devices", true);
 	declare_parameter("device_id", "");

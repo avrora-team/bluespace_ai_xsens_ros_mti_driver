@@ -11,15 +11,18 @@ endif()
 # Find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(GeographicLib REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 ###########
 ## Build ##
 ###########
+include_directories (${GeographicLib_INCLUDE_DIRS})
 
 link_directories(lib/xspublic/xscontroller lib/xspublic/xscommon lib/xspublic/xstypes)
 add_executable(
@@ -47,6 +50,7 @@ ament_target_dependencies(xsens_mti_node
   std_msgs
   geometry_msgs
   sensor_msgs
+	nav_msgs
 )
 
 target_link_libraries(
@@ -56,6 +60,7 @@ target_link_libraries(
 	xstypes
 	pthread
 	dl
+	${GeographicLib_LIBRARIES}
 )
 
 install(TARGETS xsens_mti_node
