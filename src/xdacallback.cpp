@@ -68,6 +68,14 @@ XdaCallback::XdaCallback(rclcpp::Node& node, size_t maxBufferSize)
 	: m_maxBufferSize(maxBufferSize)
 	, parent_node(node)
 {
+    parent_node.declare_parameter<bool>("use_utc_time");
+
+    use_utc_time = false;
+    parent_node.get_parameter("use_utc_time", use_utc_time);
+
+    if (use_utc_time) {
+        RCLCPP_INFO(parent_node.get_logger(), "Using UTC time.");
+    }
 }
 
 XdaCallback::~XdaCallback() throw()
@@ -94,8 +102,36 @@ RosXsDataPacket XdaCallback::next(const std::chrono::milliseconds &timeout)
 
 void XdaCallback::onLiveDataAvailable(XsDevice *, const XsDataPacket *packet)
 {
+    rclcpp::Time packet_time;
+
+    if (use_utc_time) {
+        if (!packet->containsUtcTime()) {
+            RCLCPP_INFO_THROTTLE(parent_node.get_logger(), *parent_node.get_clock(), 1000, "Packet doesn't contains UTC time. Check device or driver configuration. Skipping data");
+            return;
+        }
+
+        auto utc_time = packet->utcTime();
+
+        if (!(utc_time.m_valid & 0b100)) {
+            RCLCPP_INFO_THROTTLE(parent_node.get_logger(), *parent_node.get_clock(), 1000, "UTC time is not valid. Skipping data");
+            return;
+        }
+
+        using namespace std::chrono;
+        year_month_day ymd{year(utc_time.m_year),
+                           month(utc_time.m_month),
+                           day(utc_time.m_day)};
+
+        hh_mm_ss hms{hours(utc_time.m_hour) + minutes(utc_time.m_minute) + seconds(utc_time.m_second)};
+
+        auto seconds_since_epoch = (sys_days(ymd) + seconds(hms)).time_since_epoch().count();
+
+        packet_time = rclcpp::Time(seconds_since_epoch, utc_time.m_nano);
+    } else {
+        packet_time = parent_node.now();
+    }
+
 	std::unique_lock<std::mutex> lock(m_mutex);
-	rclcpp::Time now = parent_node.now();
 
 	assert(packet != 0);
 
@@ -106,7 +142,7 @@ void XdaCallback::onLiveDataAvailable(XsDevice *, const XsDataPacket *packet)
 	}
 
 	// Push new packet
-	m_buffer.push_back(RosXsDataPacket(now, *packet));
+	m_buffer.emplace_back(packet_time, *packet);
 
 	// Manual unlocking is done before notifying, to avoid waking up
 	// the waiting thread only to block again

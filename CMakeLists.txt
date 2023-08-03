@@ -3,9 +3,9 @@ project(bluespace_ai_xsens_mti_driver)
 
 cmake_policy(SET CMP0057 NEW)
 
-# Default to C++14
+# Default to C++23
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 23)
 endif()
 
 # Find dependencies

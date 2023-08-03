@@ -90,6 +90,7 @@ private:
 	std::list<RosXsDataPacket> m_buffer;
 	size_t m_maxBufferSize;
 	rclcpp::Node& parent_node;
+    bool use_utc_time;
 };
 
 #endif
