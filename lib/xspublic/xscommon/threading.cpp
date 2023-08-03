@@ -351,8 +351,8 @@ void StandardThread::stopThread(void) noexcept
 	//			return;
 	//	}
 	//#else
-	while (isAlive())
-		xsYield();
+	//while (isAlive()) // TODO: reimplement whole class with std::thread?
+	//	xsYield();
 	//#endif
 	if (pthread_join(m_thread, NULL))
 	{
