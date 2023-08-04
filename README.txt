@@ -4,9 +4,9 @@ Documentation:
     You can find the full documentation in "<your MT SDK directory>/doc/xsensdeviceapi/doc/html/index.html" under "ROS MTi driver" section. The SDK can be downloaded from https://www.xsens.com/software-downloads. Please note, this is a 3rd Party driver built from MTSDK2021.2 with no official support. Check the compatibility section for the compatible devices. For official support on Xsens MTi products, please refer to Xsens knowledge base: https://base.xsens.com
 
 Prerequisites:
-    - ROS 2.0 Foxy
-    - C/C++ Compiler: GCC 5.4.0 or MSVC 14.0
-    - C++14
+    - ROS 2 Humble
+    - C/C++ Compiler: GCC 11.4 or MSVC 14.0
+    - C++23
 
 Building:
     - Copy bluespace_ai_xsens_mti_driver folder into your ROS 2.0 workspace 'src' folder.
@@ -61,10 +61,15 @@ Compatibility:
             MTi 10-series
             MTi 100-series
             MTi 600-series
+            MTi 700-series
     - The driver has been tested on amd64 as well as ARM 64-bit (aarch64) architectures. 
 
 
 Notes:
+    - UTC timestamps
+        It is possible to timestamp messages with UTC time. Set parameter **use_utc_time** to **true** to enable UTC timestamp.
+        Please, don't forget to configure UTC time output in MTManager.
+
     - ROS timestamps
         The data messages from devices are time stamped on arrival in the ROS driver.
         When collecting data at higher rates, eg 100 Hz, the times between reads can differ from the configured output rate in the device.
