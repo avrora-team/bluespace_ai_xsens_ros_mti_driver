@@ -334,6 +334,9 @@ bool XdaInterface::handleError(std::string error)
 void XdaInterface::declareCommonParameters()
 {
 	// Declare ROS parameters common to all the publishers
+    std::string world_frame_id = DEFAULT_WORLD_FRAME_ID;
+    declare_parameter("world_frame_id", world_frame_id);
+
 	std::string frame_id = DEFAULT_FRAME_ID;
 	declare_parameter("frame_id", frame_id);
 

@@ -25,6 +25,7 @@
         use_utc_time: true
 
         # TF transform frame_id (default: imu_link), you may want to change it if you use multiple devices
+        world_frame_id: "world"
         frame_id: "imu_link"
 
         # Message publishers

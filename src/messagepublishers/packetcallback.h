@@ -65,7 +65,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <xstypes/xsdatapacket.h>
 
-const char* DEFAULT_FRAME_ID = "imu_link";
+constexpr auto DEFAULT_WORLD_FRAME_ID = "world";
+constexpr auto DEFAULT_FRAME_ID = "imu_link";
 
 class PacketCallback
 {
