@@ -48,3 +48,31 @@ def generate_launch_description():
     ld.add_action(state_publisher_node)
 
     return ld
+
+
+def generate_launch_description():
+    config_file = LaunchConfiguration('config_file')
+    namespace_param = LaunchConfiguration('namespace')
+
+    # Acquire the driver param file
+    config_file_declaration = DeclareLaunchArgument('config_file',
+                                                    default_value=os.path.join(
+                                                        get_package_share_directory('sbg_driver'),
+                                                        'params',
+                                                        'sbg_config.yaml'))
+
+    params_namespace_declare = DeclareLaunchArgument('namespace',
+                                                     default_value='/imu_sensor',
+                                                     description='Driver namespace')
+
+    sbg_driver_node = Node(package='sbg_driver',
+                           namespace=[namespace_param],
+                           executable='sbg_device',
+                           output='screen',
+                           parameters=[config_file])
+
+    return LaunchDescription([
+        config_file_declaration,
+        params_namespace_declare,
+        sbg_driver_node,
+    ])

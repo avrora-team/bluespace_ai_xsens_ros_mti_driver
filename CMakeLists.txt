@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.22)
 project(bluespace_ai_xsens_mti_driver)
 
 cmake_policy(SET CMP0057 NEW)
