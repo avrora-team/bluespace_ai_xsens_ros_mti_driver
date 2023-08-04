@@ -5,9 +5,9 @@
         ##  - scan_for devices = 
         ##          true:   the driver ignores port and baudrate settings, scans for devices on all ports and selects the first found
         ##          false: = Requires correct port and baudrate both to be specified
-        scan_for_devices: false
-        port: "/dev/ttyUSB0" # port name, e.g. '/dev/ttyUSB0'
-        baudrate: 921600 # non necessary for some devices
+        scan_for_devices: true
+        port: "" # port name, e.g. '/dev/ttyUSB0'
+        baudrate: 115200 # non necessary for some devices
 
         ## Connect only to specific device_id:
         ##  device_id = '077007EF' (uppercase hex string), returns with error if the device with ID is not found on the ports
