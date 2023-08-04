@@ -50,7 +50,7 @@ ament_target_dependencies(xsens_mti_node
   std_msgs
   geometry_msgs
   sensor_msgs
-	nav_msgs
+  nav_msgs
 )
 
 target_link_libraries(
