@@ -66,6 +66,7 @@
 #include <xstypes/xsdatapacket.h>
 
 constexpr auto DEFAULT_WORLD_FRAME_ID = "world";
+constexpr auto DEFAULT_ODOM_FRAME_ID = "odom";
 constexpr auto DEFAULT_FRAME_ID = "imu_link";
 
 class PacketCallback

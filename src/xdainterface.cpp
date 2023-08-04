@@ -337,6 +337,9 @@ void XdaInterface::declareCommonParameters()
     std::string world_frame_id = DEFAULT_WORLD_FRAME_ID;
     declare_parameter("world_frame_id", world_frame_id);
 
+    std::string odom_frame_id = DEFAULT_ODOM_FRAME_ID;
+    declare_parameter("odom_frame_id", odom_frame_id);
+
 	std::string frame_id = DEFAULT_FRAME_ID;
 	declare_parameter("frame_id", frame_id);
 
