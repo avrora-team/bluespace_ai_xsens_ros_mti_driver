@@ -69,12 +69,18 @@ XdaCallback::XdaCallback(rclcpp::Node& node, size_t maxBufferSize)
 	, parent_node(node)
 {
     parent_node.declare_parameter<bool>("use_utc_time");
+    parent_node.declare_parameter<bool>("require_utc_valid");
 
     use_utc_time = false;
+    require_utc_valid = true;
     parent_node.get_parameter("use_utc_time", use_utc_time);
+    parent_node.get_parameter("require_utc_valid", require_utc_valid);
 
     if (use_utc_time) {
         RCLCPP_INFO(parent_node.get_logger(), "Using UTC time.");
+    }
+    if (!require_utc_valid) {
+      RCLCPP_INFO(parent_node.get_logger(), "UTC valid flag is not required.");
     }
 }
 
@@ -112,7 +118,7 @@ void XdaCallback::onLiveDataAvailable(XsDevice *, const XsDataPacket *packet)
 
         auto utc_time = packet->utcTime();
 
-        if (!(utc_time.m_valid & 0b100)) {
+        if (!(utc_time.m_valid & 0b100) && require_utc_valid) {
             RCLCPP_INFO_THROTTLE(parent_node.get_logger(), *parent_node.get_clock(), 1000, "UTC time is not valid. Skipping data");
             return;
         }

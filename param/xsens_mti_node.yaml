@@ -24,6 +24,9 @@
         # Publish messages with UTC time
         use_utc_time: true
 
+        # Require UTC valid flag
+        require_utc_valid: true
+
         # TF transform frame_id (default: imu_link), you may want to change it if you use multiple devices
         world_frame_id: "world"
         odom_frame_id: "odom"
